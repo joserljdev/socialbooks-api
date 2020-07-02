@@ -7,7 +7,9 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,11 +28,21 @@ public class LivrosResources {
 	@Autowired
 	private LivrosService livrosService;
 
-	@RequestMapping(method = RequestMethod.GET)
+	@Secured({ "ROLE_USER", "ROLE_ADMIN" })
+	@RequestMapping(method = RequestMethod.GET, produces = { MediaType.APPLICATION_JSON_VALUE,
+			MediaType.APPLICATION_JSON_UTF8_VALUE })
 	public ResponseEntity<List<Livro>> listar() {
 		return ResponseEntity.status(HttpStatus.OK).body(livrosService.listar());
 	}
 
+	@Secured({ "ROLE_USER", "ROLE_ADMIN" })
+	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
+	public ResponseEntity<?> buscar(@PathVariable("id") Long id) {
+		Livro livro = livrosService.buscar(id);
+		return ResponseEntity.status(HttpStatus.OK).body(livro);
+	}
+	
+	@Secured({ "ROLE_USER", "ROLE_ADMIN" })
 	@RequestMapping(method = RequestMethod.POST)
 	public ResponseEntity<Void> salvar(@Valid @RequestBody Livro livro) {
 		livro = livrosService.salvar(livro);
@@ -41,18 +53,7 @@ public class LivrosResources {
 		return ResponseEntity.created(uri).build();
 	}
 
-	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
-	public ResponseEntity<?> buscar(@PathVariable("id") Long id) {
-		Livro livro = livrosService.buscar(id);
-		return ResponseEntity.status(HttpStatus.OK).body(livro);
-	}
-
-	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-	public ResponseEntity<Void> deletar(@PathVariable("id") Long id) {
-		livrosService.deletar(id);
-		return ResponseEntity.noContent().build();
-	}
-
+	@Secured({ "ROLE_USER", "ROLE_ADMIN" })	
 	@RequestMapping(value = "/{id}", method = RequestMethod.PUT)
 	public ResponseEntity<Void> atualizar(@RequestBody Livro livro, 
 			@PathVariable("id") Long id) {
@@ -62,6 +63,14 @@ public class LivrosResources {
 		return ResponseEntity.noContent().build();
 	}
 	
+	@Secured({ "ROLE_ADMIN" })
+	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+	public ResponseEntity<Void> deletar(@PathVariable("id") Long id) {
+		livrosService.deletar(id);
+		return ResponseEntity.noContent().build();
+	}
+	
+	@Secured({ "ROLE_USER", "ROLE_ADMIN" })
 	@RequestMapping(value = "/{id}/comentarios", method = RequestMethod.POST)
 	public ResponseEntity<Void> adicionarComentario(@PathVariable("id") Long livroId, 
 			@RequestBody Comentario comentario) {
@@ -73,6 +82,7 @@ public class LivrosResources {
 		return ResponseEntity.created(uri).build();
 	}
 	
+	@Secured({ "ROLE_USER", "ROLE_ADMIN" })
 	@RequestMapping(value = "/{id}/comentarios", method = RequestMethod.GET)
 	public ResponseEntity<List<Comentario>> listarComentarios(
 			@PathVariable("id")Long livroId) {
